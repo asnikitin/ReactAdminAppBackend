@@ -1,15 +1,11 @@
 const post = require('../models/post.model.js');
-
 exports.findAll = (req, res) => {
-
     var pagination;
     var sort;
     var filter;
-
     // const pagination = JSON.parse(req.query.pagination);
     // const sort = JSON.parse(req.query.sort);
     // const filter = JSON.parse(req.query.filter);
-
     if (req.query.pagination != null && req.query.pagination != undefined && req.query.pagination != '') {
         pagination = JSON.parse(req.query.pagination);
     } else {
@@ -18,7 +14,6 @@ exports.findAll = (req, res) => {
             "perPage": 10
         };
     }
-
     if (req.query.sort != null && req.query.sort != undefined && req.query.sort != '') {
         sort = JSON.parse(req.query.sort);
     } else {
@@ -27,7 +22,6 @@ exports.findAll = (req, res) => {
             "'order": "ASC"
         }
     }
-
     if (req.query.filter != null && req.query.filter != undefined && req.query.filter != '') {
         filter = JSON.parse(req.query.filter);
     } else {
@@ -35,8 +29,7 @@ exports.findAll = (req, res) => {
             "_id": [],
         }
     }
-
-    //pagination 
+    //pagination
     var pageNo = parseInt(pagination.page)
     var size = parseInt(pagination.perPage)
     var query = {}
@@ -49,8 +42,6 @@ exports.findAll = (req, res) => {
     }
     query.skip = size * (pageNo - 1);
     query.limit = size;
-
-
     //sort
     var sortObject = {};
     var stype = sort.field;
@@ -60,15 +51,12 @@ exports.findAll = (req, res) => {
     else
         sdir = -1;
     sortObject[stype] = sdir;
-
     var keys = '';
     for (var key in filter) keys = key;
-
     var Obj = {};
     Obj[keys] = {
         "$in": filter[keys]
     };
-
     post.find(Obj, null, {
             skip: query.skip,
             limit: query.limit,
@@ -85,43 +73,28 @@ exports.findAll = (req, res) => {
                     total: count
                 });
             });
-
         }).catch(err => {
             res.status(500).send({
                 message: err.message || "Some error occurred while retrieving notes."
             });
         });
-
 };
-
 exports.update = (req, res) => {
-
     post.findByIdAndUpdate(
-        // the id of the item to find
         req.params.postId,
-        // the change to be made. Mongoose will smartly combine your existing 
-        // document with this change, which allows for partial updates too
         req.body,
-        // an option that asks mongoose to return the updated version 
-        // of the document instead of the pre-updated one.
         {
             new: true
         },
-
-        // the callback function
         (err, data) => {
-            // Handle any possible database errors
             if (err) return res.status(500).send(err);
             return res.json({
                 data: data
             });
         }
     )
-
 };
-
 exports.delete = (req, res) => {
-
     post.remove({
         id: parseInt(req.params.postId)
     }, (err, resp) => {
@@ -133,9 +106,7 @@ exports.delete = (req, res) => {
             message: "Record successfully deleted",
         });
     });
-
 };
-
 exports.getbyid = (req, res) => {
     post.find({
             id: parseInt(req.params.postId)
