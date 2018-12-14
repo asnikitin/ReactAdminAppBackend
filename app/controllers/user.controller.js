@@ -1,6 +1,10 @@
 const user = require('../models/user.model.js');
 
-exports.findAll = (req, res) => {
+//------------- Start REST Client methods section ---------------------
+// this api according to https://marmelab.com/admin-on-rest/RestClients.html#writing-your-own-rest-client (restClient)
+//https://github.com/marmelab/admin-on-rest/blob/master/docs/RestClients.md (Writing Your Own REST Client section)
+
+exports.findAll_new = (req, res) => {
 
     var pagination;
     var sort;
@@ -94,7 +98,7 @@ exports.findAll = (req, res) => {
 
 };
 
-exports.update = (req, res) => {
+exports.update_new = (req, res) => {
 
     user.findByIdAndUpdate(
         // the id of the item to find
@@ -120,23 +124,7 @@ exports.update = (req, res) => {
 
 };
 
-exports.delete = (req, res) => {
-
-    user.remove({
-        id: parseInt(req.params.Id)
-    }, (err, resp) => {
-        if (err) return res.status(500).send(err);
-        res.json({
-            data: {
-                id: parseInt(req.params.Id)
-            },
-            message: "Record deleted successfully",
-        });
-    });
-
-};
-
-exports.getbyid = (req, res) => {
+exports.getbyid_new = (req, res) => {
     user.find({
             id: parseInt(req.params.Id)
         })
@@ -150,3 +138,90 @@ exports.getbyid = (req, res) => {
             });
         });
 };
+
+//------------- End REST Client methods section ---------------------
+
+
+//---------- Start JSON Server REST methods section ------------
+
+exports.findAll = (req, res) => {
+    var sortObject = {};
+    var stype = req.query._sort;
+    var sdir = '';
+    if (req.query._order == 'ASC')
+        sdir = 1;
+    else
+        sdir = -1;
+    sortObject[stype] = sdir;
+
+    user.find({}, null, {
+            skip: parseInt(req.query._start),
+            limit: parseInt(req.query._end),
+            sort: sortObject
+        })
+        .then(data => {
+            user.countDocuments({}).then(count => {
+                res.setHeader('X-Total-Count', count);
+                res.json(data);
+            });
+        }).catch(err => {
+            res.status(500).send({
+                message: err.message || "Some error occurred while retrieving notes."
+            });
+        });
+};
+
+exports.update = (req, res) => {
+
+    user.findOneAndUpdate({
+        id: parseInt(req.params.Id),
+    }, {
+        $set: {
+            "name": req.body.name,
+            "username": req.body.username,
+            "email": req.body.username,
+            "phone": req.body.email,
+            "website": req.body.website
+        }
+    }, (err, data) => {
+        if (err) return res.status(500).send(err);
+        return res.json(
+            data
+        );
+
+    });
+
+};
+
+//---------- End JSON Server REST methods section ------------------------
+
+
+exports.delete = (req, res) => {
+
+    user.deleteOne({
+        id: parseInt(req.params.Id)
+    }, (err, resp) => {
+        if (err) return res.status(500).send(err);
+        res.json({
+            id: parseInt(req.params.Id)
+        });
+    });
+
+};
+
+exports.getbyid = (req, res) => {
+    user.findOne({
+            id: parseInt(req.params.Id)
+        })
+        .then(data => {
+            res.send(data);
+        }).catch(err => {
+            res.status(500).send({
+                message: err.message || "Some error occurred while retrieving notes."
+            });
+        });
+};
+
+
+
+//----------------------------------

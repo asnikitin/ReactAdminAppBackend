@@ -1,5 +1,10 @@
 const post = require('../models/post.model.js');
-exports.findAll = (req, res) => {
+
+//------------- Start REST Client methods section ---------------------
+// this api according to https://marmelab.com/admin-on-rest/RestClients.html#writing-your-own-rest-client (restClient)
+//https://github.com/marmelab/admin-on-rest/blob/master/docs/RestClients.md (Writing Your Own REST Client section)
+
+exports.findAll_new = (req, res) => {
     var pagination;
     var sort;
     var filter;
@@ -22,12 +27,15 @@ exports.findAll = (req, res) => {
             "'order": "ASC"
         }
     }
+    var keys = '';
+    var Obj = {};
+
     if (req.query.filter != null && req.query.filter != undefined && req.query.filter != '') {
         filter = JSON.parse(req.query.filter);
-    } else {
-        filter = {
-            "_id": [],
-        }
+        for (var key in filter) keys = key;
+        Obj[keys] = {
+            "$in": filter[keys]
+        };
     }
     //pagination
     var pageNo = parseInt(pagination.page)
@@ -51,12 +59,7 @@ exports.findAll = (req, res) => {
     else
         sdir = -1;
     sortObject[stype] = sdir;
-    var keys = '';
-    for (var key in filter) keys = key;
-    var Obj = {};
-    Obj[keys] = {
-        "$in": filter[keys]
-    };
+
     post.find(Obj, null, {
             skip: query.skip,
             limit: query.limit,
@@ -67,7 +70,7 @@ exports.findAll = (req, res) => {
                 // if (err) {
                 //     return res.json(count_error);
                 // }
-                res.setHeader('X-Total-Count', count)
+                res.setHeader('X-Total-Count', count);
                 res.json({
                     data: data,
                     total: count
@@ -79,11 +82,26 @@ exports.findAll = (req, res) => {
             });
         });
 };
-exports.update = (req, res) => {
+
+exports.getbyid__new = (req, res) => {
+    post.findOne({
+            id: parseInt(req.params.postId)
+        })
+        .then(data => {
+            res.send({
+                data: data
+            });
+        }).catch(err => {
+            res.status(500).send({
+                message: err.message || "Some error occurred while retrieving notes."
+            });
+        });
+};
+
+exports.update_new = (req, res) => {
     post.findByIdAndUpdate(
         req.params.postId,
-        req.body,
-        {
+        req.body, {
             new: true
         },
         (err, data) => {
@@ -94,27 +112,82 @@ exports.update = (req, res) => {
         }
     )
 };
+
+//------------- End REST Client methods section ---------------------
+
+
+
+//---------- Start JSON Server REST methods section ------------
+exports.findAll = (req, res) => {
+    var sortObject = {};
+    var stype = req.query._sort;
+    var sdir = '';
+    if (req.query._order == 'ASC')
+        sdir = 1;
+    else
+        sdir = -1;
+    sortObject[stype] = sdir;
+
+    post.find({}, null, {
+            skip: parseInt(req.query._start),
+            limit: parseInt(req.query._end),
+            sort: sortObject
+        })
+        .then(data => {
+            post.countDocuments({}).then(count => {
+                // if (err) {
+                //     return res.json(count_error);
+                // }
+                res.setHeader('X-Total-Count', count);
+                res.json(data);
+            });
+        }).catch(err => {
+            res.status(500).send({
+                message: err.message || "Some error occurred while retrieving notes."
+            });
+        });
+};
+
+exports.update = (req, res) => {
+
+    post.findOneAndUpdate({
+        id: parseInt(req.params.postId),
+    }, {
+        $set: {
+            title: req.body.title,
+            body: req.body.body,
+        }
+    }, (err, data) => {
+        if (err) return res.status(500).send(err);
+        return res.json(
+            data
+        );
+
+    });
+
+};
+
+//---------- End JSON Server REST methods section ------------------------
+
+
 exports.delete = (req, res) => {
-    post.remove({
+
+    post.deleteOne({
         id: parseInt(req.params.postId)
     }, (err, resp) => {
         if (err) return res.status(500).send(err);
         res.json({
-            data: {
-                id: parseInt(req.params.postId)
-            },
-            message: "Record successfully deleted",
+            id: parseInt(req.params.postId)
         });
     });
 };
+
 exports.getbyid = (req, res) => {
-    post.find({
+    post.findOne({
             id: parseInt(req.params.postId)
         })
         .then(data => {
-            res.send({
-                data: data
-            });
+            res.send(data);
         }).catch(err => {
             res.status(500).send({
                 message: err.message || "Some error occurred while retrieving notes."
