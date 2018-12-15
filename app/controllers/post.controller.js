@@ -194,3 +194,36 @@ exports.getbyid = (req, res) => {
             });
         });
 };
+
+exports.create = (req, res) => {
+
+    post.findOne({}, {
+        "id": 1
+    }, {
+        sort: {
+            '_id': -1
+        }
+    }, function (err, postid) {
+
+        var newpost = post({
+            id: postid.id + 1,
+            userId: req.body.userId,
+            title: req.body.title,
+            body: req.body.body,
+        });
+
+        newpost.save((err, data) => {
+            if (err) return res.status(500).send(err);
+            post.findOne(data)
+                .then(data => {
+                    res.send(data);
+                }).catch(err => {
+                    res.status(500).send({
+                        message: err.message || "Some error occurred while retrieving notes."
+                    });
+                });
+        });
+
+    });
+
+}

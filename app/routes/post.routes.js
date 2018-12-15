@@ -1,6 +1,9 @@
 module.exports = (app) => {
     const posts = require('../controllers/post.controller.js');
 
+    // create post (CREATE)
+    app.post('/posts', posts.create);
+
     // Retrieve post (GET_LIST)
     app.get('/posts', posts.findAll);
 
