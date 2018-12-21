@@ -1,5 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+global.jwt = require('jwt-simple');
+require('dotenv').config()
 
 // create express app
 const app = express();

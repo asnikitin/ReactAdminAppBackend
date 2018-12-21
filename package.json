@@ -18,6 +18,8 @@
   "dependencies": {
     "body-parser": "^1.18.3",
     "express": "^4.16.3",
-    "mongoose": "^5.1.2"
+    "mongoose": "^5.1.2",
+    "jwt-simple": "^0.5.1",
+    "dotenv": "^5.0.1"
   }
 }

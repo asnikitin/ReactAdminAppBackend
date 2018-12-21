@@ -13,5 +13,8 @@ module.exports = (app) => {
     //Retrieve user by id (GET_MANY)
     app.get('/users/:Id', users.getbyid);
 
+    // user login (post)
+    app.post('/validation', users.login);
+
 
 }
