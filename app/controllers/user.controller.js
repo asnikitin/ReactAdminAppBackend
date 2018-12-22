@@ -222,17 +222,4 @@ exports.getbyid = (req, res) => {
         });
 };
 
-exports.login = (req, res) => {
-
-    let user = req.body;
-    if (user.username == "test" && user.password == "test") {
-        var token = jwt.encode(user.username, process.env.SECRET);
-        res.send({
-            token: token
-        });
-    } else {
-        res.send(401, 'Wrong user or password');
-    }
-
-}
 
