@@ -26,17 +26,15 @@ exports.registration = (req, res) => {
 
                             registerdata.save((err, data) => {
                                 if (err) return res.status(500).send(err);
-                                res.status(200).send('Registration created successfully');
+                                res.status(200).json('Registration created successfully');
                             });
 
                         } else {
-                            res.status(409).send('Username already exists!');
+                            res.status(409).json('Username already exists!');
                         }
-
                     });
-
             } else {
-                res.status(409).send('Email already exists!');
+                res.status(409).json('Email already exists!');
             }
         });
 
