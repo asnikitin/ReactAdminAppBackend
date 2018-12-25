@@ -2,7 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 global.jwt = require('jwt-simple');
 require('dotenv').config()
-
+global.moment = require('moment-timezone');
 // create express app
 const app = express();
 const port = 3001;

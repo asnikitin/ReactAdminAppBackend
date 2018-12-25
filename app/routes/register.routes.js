@@ -7,4 +7,7 @@ module.exports = (app) => {
     // user login (post)
     app.post('/validation', register.login);
 
+    //user email verification (Get)
+    app.get('/verification', register.VerificationController);
+
 }
