@@ -45,13 +45,13 @@ exports.registration = (req, res) => {
 
                                 var token = jwt.encode(obj, process.env.SECRET);
 
-                                var hostUrl = "http://localhost:3001";
+                                var hostUrl = process.env.HostUrl;
                                 var to = req.body.email;
 
                                 var href = `${hostUrl}/verification?token=${token}&email=${to}`;
 
                                 var mailOptions = {
-                                    from: 'jaimin.tupple@gmail.com',
+                                    from: 'multipz.jaimin@gmail.com',
                                     to: to,
                                     subject: "Verify Your Email",
                                     html: `Click on this link to verify your email <a href=${href} target="_blank">Click here</a>`,
@@ -119,7 +119,8 @@ exports.VerificationController = (req, res) => {
                 },
                 (err, user) => {
                     if (user.isemailverified) {
-                        res.status(202).json(`Your Email Already Verified`);
+                        var html = `<br/><center><h2>Your Email Already Verified</h2></center>`;
+                        res.status(202).send(html);
                     } else {
 
                         var token_data = jwt.decode(req.query.token, process.env.SECRET);
@@ -130,21 +131,25 @@ exports.VerificationController = (req, res) => {
                         if (isbefore) {
                             user.isemailverified = true;
                             user.save((err) => {
-                                if (err) res.status(403).json(`Your Verification failed`);
-                                res.status(403).json(`Your ${user.email} has been verified`);
+                                if (err) res.status(404).json(`Your Verification failed`);
+                                var html = `<br/><center><h2>Your ${user.email} has been verified</h2></center>`;
+                                res.status(403).send(html);
                             });
                         } else {
-                            res.status(404).json("Token expired");
+                            var html = `<br/><center><h2>Your Token expired</h2></center>`;
+                            res.status(404).send(html);
                         }
                     }
                 });
 
         } else {
-            res.status(404).json("Token not found");
+            var html = `<br/><center><h2>Token not found</h2></center>`;
+            res.status(404).send(html);
         }
 
     } else {
-        res.status(404).json("Email not found");
+        var html = `<br/><center><h2>Email not found</h2></center>`;
+        res.status(404).send(html);
     }
 
 }
