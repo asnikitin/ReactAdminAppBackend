@@ -4,7 +4,6 @@ const Role = models.Role;
 const UserInRole = models.UserInRole;
 var nodemailer = require('nodemailer');
 
-
 //https://codeburst.io/sending-an-email-using-nodemailer-gmail-7cfa0712a799
 
 var transporter = nodemailer.createTransport({
@@ -232,13 +231,21 @@ exports.GetAllUsers = (req, res) => {
         if (objUser) {
 
             var i = 0;
+            var lstUsers = [];
 
             function uploader(i) {
 
                 if (i < objUser.length) {
 
+                    var obj = new Object();
+                    obj._id = objUser[i].id;
+                    obj.username = objUser[i].username;
+                    obj.email = objUser[i].email;
+                    obj.createddate = objUser[i].createddate;
+                    obj.userrole = [];
+
                     UserInRole.find({
-                        "userId": ObjectId(objUser[i].id)
+                        "userId": ObjectId(obj._id)
                     }, {
                         roleId: 1
                     }, (err, docs) => {
@@ -255,7 +262,6 @@ exports.GetAllUsers = (req, res) => {
                                         rolename: 1,
                                         _id: 1
                                     }, function (err, docs) {
-                                        // docs contains your answer
                                         //if (error) reject(error);
                                         var lstRole = [];
                                         for (var i = 0; i < docs.length; i++) {
@@ -274,11 +280,12 @@ exports.GetAllUsers = (req, res) => {
                         });
 
                         getRole(ids).then((role) => {
-                            //console.log(role);
-                            objUser[i].UserRole = role;
-                            //console.log(objUser[i]);
+
+                            obj.userrole = role;
+                            lstUsers.push(obj);
+
                             if ((i + 1) == objUser.length) {
-                                res.json(objUser);
+                                res.json(lstUsers);
                             } else {
                                 uploader(i + 1);
                             }
@@ -293,7 +300,6 @@ exports.GetAllUsers = (req, res) => {
 
             }
             uploader(i);
-
 
         }
     });
