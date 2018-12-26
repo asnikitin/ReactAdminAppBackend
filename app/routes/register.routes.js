@@ -11,6 +11,7 @@ module.exports = (app) => {
     app.get('/verification', register.VerificationController);
 
     //user email verification (Get)
+    
     app.get('/GetAllUsers', register.GetAllUsers);
 
 }
