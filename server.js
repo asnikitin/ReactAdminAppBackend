@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 global.jwt = require('jwt-simple');
 require('dotenv').config()
 global.moment = require('moment-timezone');
+global.ObjectId = require('mongodb').ObjectId;
 // create express app
 const app = express();
 const port = 3001;
@@ -55,6 +56,7 @@ require('./app/routes/note.routes.js')(app);
 require('./app/routes/post.routes.js')(app);
 require('./app/routes/user.routes.js')(app);
 require('./app/routes/register.routes.js')(app);
+require('./app/routes/role.routes.js')(app);
 
 // listen for requests
 app.listen(port, () => {

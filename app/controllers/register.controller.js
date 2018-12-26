@@ -1,5 +1,9 @@
 const register = require('../models/register.model.js');
+const models = require('../models/role.model.js');
+const Role = models.Role;
+const UserInRole = models.UserInRole;
 var nodemailer = require('nodemailer');
+
 
 //https://codeburst.io/sending-an-email-using-nodemailer-gmail-7cfa0712a799
 
@@ -25,46 +29,65 @@ exports.registration = (req, res) => {
                     (err, objusername) => {
 
                         if (!objusername) {
-                            var token = jwt.encode(req.body.email, process.env.SECRET);
-                            var password = jwt.encode(req.body.password, process.env.SECRET);
+                            //var token = jwt.encode(req.body.email, process.env.SECRET);
+                            var Encryptpassword = jwt.encode(req.body.password, process.env.SECRET);
 
                             var registerdata = register({
                                 username: req.body.username,
                                 email: req.body.email,
-                                password: password,
-                                token: token,
+                                password: Encryptpassword,
+                                //token: token,
                                 isemailverified: false
                             });
 
                             registerdata.save((err, data) => {
                                 if (err) return res.status(500).send(err);
-                                var obj = {
-                                    exp: moment().add(1, 'days').valueOf(),
-                                    email: req.body.email
-                                }
 
-                                var token = jwt.encode(obj, process.env.SECRET);
-
-                                var hostUrl = process.env.HostUrl;
-                                var to = req.body.email;
-
-                                var href = `${hostUrl}/verification?token=${token}&email=${to}`;
-
-                                var mailOptions = {
-                                    from: 'multipz.jaimin@gmail.com',
-                                    to: to,
-                                    subject: "Verify Your Email",
-                                    html: `Click on this link to verify your email <a href=${href} target="_blank">Click here</a>`,
-                                };
-
-                                //console.log(mailOptions.html);
-                                transporter.sendMail(mailOptions, (error, info) => {
-                                    if (error) {
-                                        return console.log(error);
+                                //Create User Role for New Register User
+                                Role.findOne({
+                                    "rolename": {
+                                        $regex: new RegExp("User", "i")
                                     }
-                                    console.log('Message sent: %s', info.messageId);
-                                    console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
-                                    res.status(200).json('Registration created successfully');
+                                }, (err, responce) => {
+
+                                    var objUserInRole = UserInRole({
+                                        userId: data.id,
+                                        roleId: responce.id
+                                    });
+
+                                    objUserInRole.save((err, resuerinrole) => {
+
+                                        var obj = {
+                                            exp: moment().add(1, 'days').valueOf(),
+                                            email: req.body.email
+                                        }
+
+                                        var token_email = jwt.encode(obj, process.env.SECRET);
+
+                                        var hostUrl = process.env.HostUrl;
+                                        var to = req.body.email;
+
+                                        var href = `${hostUrl}/verification?token=${token_email}&email=${to}`;
+
+                                        var mailOptions = {
+                                            from: 'multipz.jaimin@gmail.com',
+                                            to: to,
+                                            subject: "Verify Your Email",
+                                            html: `Click on this link to verify your email <a href=${href} target="_blank">Click here</a>`,
+                                        };
+
+                                        //Send Mail;
+                                        transporter.sendMail(mailOptions, (error, info) => {
+                                            if (error) {
+                                                return console.log(error);
+                                            }
+                                            console.log('Message sent: %s', info.messageId);
+                                            console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
+                                            res.status(200).json('Registration created successfully');
+                                        });
+
+                                    });
+
                                 });
 
                             });
@@ -91,14 +114,46 @@ exports.login = (req, res) => {
         (err, objUser) => {
             if (objUser) {
 
-                let user = {
-                    "isemailverified": objUser.isemailverified,
-                    "username": objUser.username,
-                    "email": objUser.email,
-                };
-                res.send({
-                    token: objUser.token,
-                    user: user
+                UserInRole.find({
+                    "userId": ObjectId(objUser.id)
+                }, {
+                    roleId: 1
+                }, (err, docs) => {
+
+                    // Map the docs into an array of just the _ids
+                    var ids = docs.map(function (doc) {
+                        return doc.roleId;
+                    });
+
+                    // Get the companies whose founders are in that set.
+                    Role.find({
+                        _id: {
+                            $in: ids
+                        }
+                    }, function (err, docs) {
+                        // docs contains your answer
+                        let lstRole = [];
+                        for (var i = 0; i < docs.length; i++) {
+                            var objRole = docs[i].rolename;
+                            lstRole.push(objRole);
+                        }
+
+                        var obj = {
+                            username: user.username,
+                            password: Encryptpassword,
+                            Role: lstRole
+                        }
+
+                        var token = jwt.encode(obj, process.env.SECRET)
+
+                        res.json({
+                            token: token,
+                            username: objUser.username,
+                            email: objUser.email,
+                            isemailverified: objUser.isemailverified
+                        });
+
+                    });
                 });
 
             } else {
@@ -118,39 +173,130 @@ exports.VerificationController = (req, res) => {
                     "email": req.query.email
                 },
                 (err, user) => {
-                    if (user.isemailverified) {
-                        var html = `<br/><center><h2>Your Email Already Verified</h2></center>`;
-                        res.status(202).send(html);
-                    } else {
 
-                        var token_data = jwt.decode(req.query.token, process.env.SECRET);
-                        var CurrentDate = moment().valueOf();
-                        var expdate = token_data.exp;
-                        var isbefore = moment(CurrentDate).isBefore(expdate);
-
-                        if (isbefore) {
-                            user.isemailverified = true;
-                            user.save((err) => {
-                                if (err) res.status(404).json(`Your Verification failed`);
-                                var html = `<br/><center><h2>Your ${user.email} has been verified</h2></center>`;
-                                res.status(403).send(html);
-                            });
+                    if (user) {
+                        if (user.isemailverified) {
+                            var html = `<br/><center><h2>Your Email Already Verified</h2></center>`;
+                            res.status(202).send(html);
                         } else {
-                            var html = `<br/><center><h2>Your Token expired</h2></center>`;
-                            res.status(404).send(html);
+
+                            try {
+                                var token_data = jwt.decode(req.query.token, process.env.SECRET);
+                                var CurrentDate = moment().valueOf();
+                                var expdate = token_data.exp;
+                                var isbefore = moment(CurrentDate).isBefore(expdate);
+
+                                if (isbefore) {
+
+                                    if (token_data.email == req.query.email) {
+                                        user.isemailverified = true;
+                                        user.save((err) => {
+                                            if (err) res.status(404).json(`Your Verification failed`);
+                                            var html = `<br/><center><h2>Your ${user.email} has been verified</h2></center>`;
+                                            res.status(403).send(html);
+                                        });
+                                    } else {
+                                        var html = `<br/><center><h2>Invalid Token</h2></center>`;
+                                        res.status(404).send(html);
+                                    }
+
+                                } else {
+                                    var html = `<br/><center><h2>Your Token expired</h2></center>`;
+                                    res.status(404).send(html);
+                                }
+                            } catch (error) {
+                                // handle query error
+                                var html = `<br/><center><h2>Invalid Token</h2></center>`;
+                                res.status(404).send(html);
+                            }
                         }
+                    } else {
+                        var html = `<br/><center><h2>Invalid Email or Token</h2></center>`;
+                        res.status(404).send(html);
                     }
                 });
-
         } else {
             var html = `<br/><center><h2>Token not found</h2></center>`;
             res.status(404).send(html);
         }
-
     } else {
         var html = `<br/><center><h2>Email not found</h2></center>`;
         res.status(404).send(html);
     }
+
+}
+
+exports.GetAllUsers = (req, res) => {
+
+    register.find({}, (err, objUser) => {
+        if (objUser) {
+
+            var i = 0;
+
+            function uploader(i) {
+
+                if (i < objUser.length) {
+
+                    UserInRole.find({
+                        "userId": ObjectId(objUser[i].id)
+                    }, {
+                        roleId: 1
+                    }, (err, docs) => {
+
+                        let getRole = (data) => {
+                            return new Promise(
+                                (resolve, reject) => {
+
+                                    Role.find({
+                                        _id: {
+                                            $in: data
+                                        }
+                                    }, {
+                                        rolename: 1,
+                                        _id: 1
+                                    }, function (err, docs) {
+                                        // docs contains your answer
+                                        //if (error) reject(error);
+                                        var lstRole = [];
+                                        for (var i = 0; i < docs.length; i++) {
+                                            var objRole = docs[i];
+                                            lstRole.push(objRole);
+                                        }
+                                        resolve(lstRole);
+                                    });
+
+                                }
+                            );
+                        };
+
+                        var ids = docs.map(function (doc) {
+                            return doc.roleId;
+                        });
+
+                        getRole(ids).then((role) => {
+                            //console.log(role);
+                            objUser[i].UserRole = role;
+                            //console.log(objUser[i]);
+                            if ((i + 1) == objUser.length) {
+                                res.json(objUser);
+                            } else {
+                                uploader(i + 1);
+                            }
+
+                        }).catch(
+                            error => console.log(error)
+                        );
+
+                    });
+
+                }
+
+            }
+            uploader(i);
+
+
+        }
+    });
 
 }
 
