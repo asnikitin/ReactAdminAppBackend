@@ -149,7 +149,8 @@ exports.login = (req, res) => {
                             token: token,
                             username: objUser.username,
                             email: objUser.email,
-                            isemailverified: objUser.isemailverified
+                            isemailverified: objUser.isemailverified,
+                            role: lstRole
                         });
 
                     });
