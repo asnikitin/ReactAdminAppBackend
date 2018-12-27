@@ -193,26 +193,26 @@ exports.VerificationController = (req, res) => {
                                         user.save((err) => {
                                             if (err) res.status(404).json(`Your Verification failed`);
                                             var html = `<br/><center><h2>Your ${user.email} has been verified</h2></center>`;
-                                            res.status(403).send(html);
+                                            res.status(200).send(html);
                                         });
                                     } else {
                                         var html = `<br/><center><h2>Invalid Token</h2></center>`;
-                                        res.status(404).send(html);
+                                        res.status(400).send(html);
                                     }
 
                                 } else {
                                     var html = `<br/><center><h2>Your Token expired</h2></center>`;
-                                    res.status(404).send(html);
+                                    res.status(400).send(html);
                                 }
                             } catch (error) {
                                 // handle query error
                                 var html = `<br/><center><h2>Invalid Token</h2></center>`;
-                                res.status(404).send(html);
+                                res.status(400).send(html);
                             }
                         }
                     } else {
                         var html = `<br/><center><h2>Invalid Email or Token</h2></center>`;
-                        res.status(404).send(html);
+                        res.status(400).send(html);
                     }
                 });
         } else {
@@ -306,6 +306,81 @@ exports.GetAllUsers = (req, res) => {
     });
 
 }
+
+exports.UpdateUserRole = (req, res) => {
+
+    var roleIds = req.body.roleId;
+
+    register.find({
+        _id: ObjectId(req.params.UserId)
+    }, (err, objUser) => {
+
+        if (objUser != null) {
+
+            UserInRole.deleteMany({
+                userId: ObjectId(req.params.UserId)
+            }, (err, resrole) => {
+
+                if (roleIds.length > 0) {
+
+                    function uploader(i) {
+
+                        if (i < roleIds.length) {
+
+                            // var objUserInRole = {
+                            //     userId: ObjectId(req.params.UserId),
+                            //     roleId: ObjectId(roleId[i].id)
+                            // }
+
+                            var objUserInRole = UserInRole({
+                                userId: ObjectId(req.params.UserId),
+                                roleId: ObjectId(roleIds[i].id)
+                            });
+
+                            objUserInRole.save((err, resuerinrole) => {
+                                if (roleIds.length == (i + 1)) {
+                                    res.json({
+                                        message: "User updated successfully...",
+                                        data: resuerinrole
+                                    });
+                                } else {
+                                    uploader(i + 1);
+                                }
+                            });
+                        }
+                    }
+                    uploader(0);
+
+                } else {
+                    res.status(304).json({
+                        message: "Please Select atleast One Role..."
+                    });
+                }
+            });
+        } else {
+            res.status(404).json("User Not found...");
+        }
+
+    });
+
+    // post.findOneAndUpdate({
+    //     id: parseInt(req.params.postId),
+    // }, {
+    //     $set: {
+    //         title: req.body.title,
+    //         body: req.body.body,
+    //     }
+    // }, (err, data) => {
+    //     if (err) return res.status(500).send(err);
+    //     return res.json(
+    //         data
+    //     );
+
+    // });
+
+
+
+};
 
 // --------- smtpTransport -------
 // var smtpTransport = require('nodemailer-smtp-transport');

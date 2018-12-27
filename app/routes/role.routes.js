@@ -6,16 +6,18 @@ module.exports = (app) => {
 
     // create role (CREATE)
     app.post('/role', role.CreateRole);
-
-    // update a user (UPDATE)
-    //app.put('/role/:Id', role.update);
-
+    
     // delete user (DELETE)
-    //app.delete('/role/:Id', role.delete);
+    app.delete('/role/:Id', role.DeleteRole);
 
-    //Retrieve user by id (GET_MANY)
-    //app.get('/role/:Id', role.getbyid);
+    //Change user permission or restrictions
+    app.post('/ChangePermission', role.ChangePermission);
 
+    //get user permission or restrictions by rolename
+    app.get('/GetAllPermissionByRole', role.GetAllPermissionByRole);
+
+    //ckeck user permission or restrictions by module and permission type
+    app.get('/CheckRights', role.CheckRights);
 
 
 }

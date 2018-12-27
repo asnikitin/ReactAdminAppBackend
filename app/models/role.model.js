@@ -22,7 +22,20 @@ const UserInRoleSchema = mongoose.Schema({
     versionKey: false
 });
 
+
+const UserPermissionSchema = mongoose.Schema({
+    ModuleName: String,
+    RoleName: String,
+    Show: {
+        type: Boolean,
+        default: true
+    }
+}, {
+    versionKey: false
+});
+
 module.exports = {
     Role: mongoose.model('role', RoleSchema, 'role'),
-    UserInRole: mongoose.model('userinrole', UserInRoleSchema, 'userinrole')
+    UserInRole: mongoose.model('userinrole', UserInRoleSchema, 'userinrole'),
+    UserPermission: mongoose.model('userpermission', UserPermissionSchema, 'userpermission')
 };
