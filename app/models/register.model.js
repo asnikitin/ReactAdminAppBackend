@@ -4,7 +4,10 @@ const RegisterSchema = mongoose.Schema({
     username: String,
     email: String,
     password: String,
-    token: String,
+    isemailverified: {
+        type: Boolean,
+        default: false
+    },
     createddate: {
         type: Date,
         default: Date.now
