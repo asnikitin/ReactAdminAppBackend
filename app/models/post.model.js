@@ -8,9 +8,25 @@ const PostSchema = mongoose.Schema({
     },
     image: String,
     title: String,
-    body: String
+    body: String,
+    forwardlinks: {},
+    backlinks: {},
+}, {
+    versionKey: false,
+    strict: false
+});
+
+var schema = mongoose.Schema({
+    img: {
+        data: Buffer,
+        contentType: String
+    }
 }, {
     versionKey: false
 });
 
-module.exports = mongoose.model('post', PostSchema, 'post');
+
+module.exports = {
+    post: mongoose.model('post', PostSchema, 'post'),
+    MediaUpload: mongoose.model('MediaUpload', schema, 'MediaUpload'),
+};

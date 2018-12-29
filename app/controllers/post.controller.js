@@ -1,4 +1,8 @@
-const post = require('../models/post.model.js');
+const models = require('../models/post.model.js');
+const post = models.post;
+const MediaUpload = models.MediaUpload;
+
+
 
 //------------- Start REST Client methods section ---------------------
 // this api according to https://marmelab.com/admin-on-rest/RestClients.html#writing-your-own-rest-client (restClient)
@@ -150,20 +154,56 @@ exports.findAll = (req, res) => {
 
 exports.update = (req, res) => {
 
+    // temporary store Image Base64 string into MediaUpload collection.
+
+    //console.log(req.body);
+    // var imgPath = req.body.pictures[0].src;
+    // var Media = new MediaUpload;
+    // Media.img.data = imgPath;
+    // Media.img.contentType = 'image/jpeg';
+    // Media.save((err, a) => {
+    //     console.log(a);
+    //     MediaUpload.findById(a, (err, doc) => {
+    //         if (err) return next(err);
+    //         //res.contentType(doc.img.contentType);
+    //         //res.send(doc.img.data);
+    //         post.findOneAndUpdate({
+    //             id: parseInt(req.params.postId),
+    //         }, {
+    //             $set: {
+    //                 title: req.body.title,
+    //                 body: req.body.body,
+    //                 forwardlinks: req.body.forwardlinks,
+    //                 backlinks: req.body.backlinks
+    //             }
+    //         }, (err, data) => {
+    //             if (err) return res.status(500).send(err);
+    //             return res.json(
+    //                 data
+    //             );
+    //         });
+    //     });
+    // })
+
+    //End temporary store Image Base64 string into MediaUpload collection.
+
     post.findOneAndUpdate({
         id: parseInt(req.params.postId),
     }, {
         $set: {
             title: req.body.title,
             body: req.body.body,
+            forwardlinks: req.body.forwardlinks,
+            backlinks: req.body.backlinks
         }
     }, (err, data) => {
         if (err) return res.status(500).send(err);
         return res.json(
             data
         );
-
     });
+
+
 
 };
 
@@ -197,6 +237,8 @@ exports.getbyid = (req, res) => {
 
 exports.create = (req, res) => {
 
+    console.log(req.body);
+
     post.findOne({}, {
         "id": 1
     }, {
@@ -210,6 +252,8 @@ exports.create = (req, res) => {
             userId: req.body.userId,
             title: req.body.title,
             body: req.body.body,
+            forwardlinks: req.body.forwardlinks,
+            backlinks: req.body.backlinks
         });
 
         newpost.save((err, data) => {
