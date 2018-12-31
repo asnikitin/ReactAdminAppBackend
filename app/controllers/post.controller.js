@@ -1,8 +1,9 @@
 const models = require('../models/post.model.js');
 const post = models.post;
 const MediaUpload = models.MediaUpload;
-
-
+var fs = require("fs");
+var path = require('path');
+var FilePath = path.join(__dirname, '../../MediaUploads');
 
 //------------- Start REST Client methods section ---------------------
 // this api according to https://marmelab.com/admin-on-rest/RestClients.html#writing-your-own-rest-client (restClient)
@@ -270,4 +271,127 @@ exports.create = (req, res) => {
 
     });
 
+}
+
+exports.upload = (req, res) => {
+
+    var form = new formidable.IncomingForm();
+    form.uploadDir = FilePath;
+    var FileName = [];
+    var lstPost = [];
+
+    //file upload path
+    form.parse(req, function (err, fields, files) {
+
+    });
+
+
+    form.on('fileBegin', function (name, file) {
+        var ext = file.name.substring(file.name.indexOf('.'), file.name.length);
+        var NewName = GetNameFromDate();
+        if (ext.indexOf('?') > -1) {
+            ext = ext.substring(0, ext.indexOf('?'));
+        };
+        file.path = form.uploadDir + "/" + NewName + ext;
+        path = file.path;
+        FileName.push(NewName + ext);
+        lstPost.push(name);
+    });
+
+    form.on('end', function () {
+
+        function uploader(i) {
+            if (i < FileName.length) {
+                var Id = parseInt(lstPost[i]);
+                post.findOne({
+                        id: Id
+                    })
+                    .then(response => {
+
+                        if (response != null) {
+
+                            //Image Field found In Records
+                            if (response.image) {
+                                if (response.image != '' && response.image != null && response.image != undefined) {
+                                    var ImageName = response.image.substring(response.image.lastIndexOf('/'), response.image.length);
+                                    var oldFile = FilePath + ImageName;
+
+                                    //Remove Old File
+                                    fs.exists(oldFile, (exists) => {
+                                        if (exists) {
+                                            fs.unlink(oldFile);
+                                        }
+                                    });
+                                    response.image = process.env.HostUrl + "/MediaUploads/" + FileName[i];
+                                    response.save()
+                                        .then(data => {
+                                            if ((i + 1) == FileName.length) {
+                                                res.json({
+                                                    message: "Images Uploaded Successfully...",
+                                                });
+                                            } else {
+                                                uploader(i + 1);
+                                            };
+                                        })
+                                        .catch(
+                                            err => {
+                                                res.status(500).send({
+                                                    message: err
+                                                });
+                                            }
+                                        );
+                                }
+
+                            } else {
+                                //Image Field not found in records
+                                response.image = process.env.HostUrl + "/MediaUploads/" + FileName[i];
+                                response.save()
+                                    .then(data => {
+                                        if ((i + 1) == FileName.length) {
+                                            res.json({
+                                                message: "Images Uploaded Successfully...",
+                                            });
+                                        } else {
+                                            uploader(i + 1);
+                                        };
+                                    })
+                                    .catch(
+                                        err => {
+                                            res.status(500).send({
+                                                message: err
+                                            });
+                                        }
+                                    );
+                            }
+                        }
+                    }).catch(err => {
+                        res.status(500).send({
+                            message: err
+                        });
+                    });
+            }
+
+        }
+        uploader(0);
+
+    });
+
+}
+
+exports.GetImage = (req, res) => {
+    var File = FilePath + "/" + req.params.name;
+    res.sendFile(File);
+
+}
+
+function GetNameFromDate() {
+    var d = new Date();
+    var curr_date = d.getDate();
+    var curr_month = d.getMonth() + 1; //Months are zero based
+    var curr_year = d.getFullYear();
+    var seconds = d.getSeconds();
+    var minutes = d.getMinutes();
+    var hour = d.getHours();
+    var milisec = d.getMilliseconds();
+    return curr_year.toString() + curr_month.toString() + curr_date.toString() + hour.toString() + minutes.toString() + seconds.toString() + milisec.toString();
 }

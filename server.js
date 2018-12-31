@@ -4,6 +4,7 @@ global.jwt = require('jwt-simple');
 require('dotenv').config()
 global.moment = require('moment-timezone');
 global.ObjectId = require('mongodb').ObjectId;
+global.formidable = require('formidable');
 // create express app
 const app = express();
 const port = 3001;

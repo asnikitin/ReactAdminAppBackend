@@ -16,5 +16,10 @@ module.exports = (app) => {
     //Retrieve post by id (GET_MANY)
     app.get('/posts/:postId', posts.getbyid);
 
+    // upload image
+    app.post('/upload', posts.upload);
+
+    app.get('/MediaUploads/:name', posts.GetImage);
+
 
 }
