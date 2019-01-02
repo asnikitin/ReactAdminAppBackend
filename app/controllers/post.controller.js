@@ -192,10 +192,14 @@ exports.update = (req, res) => {
         id: parseInt(req.params.postId),
     }, {
         $set: {
-            title: req.body.title,
-            body: req.body.body,
-            forwardlinks: req.body.forwardlinks,
-            backlinks: req.body.backlinks
+            // title: req.body.title,
+            // body: req.body.body,
+            // forwardlinks: req.body.forwardlinks,
+            // backlinks: req.body.backlinks
+            userId: req.body.userId,
+            posts: req.body.posts,
+            comments: req.body.comments,
+            settings: req.body.settings
         }
     }, (err, data) => {
         if (err) return res.status(500).send(err);
@@ -238,7 +242,7 @@ exports.getbyid = (req, res) => {
 
 exports.create = (req, res) => {
 
-    console.log(req.body);
+    //console.log(req.body);
 
     post.findOne({}, {
         "id": 1
@@ -248,13 +252,23 @@ exports.create = (req, res) => {
         }
     }, function (err, postid) {
 
+        // var newpost = post({
+        //     id: postid.id + 1,
+        //     userId: req.body.userId,
+        //     title: req.body.title,
+        //     body: req.body.body,
+        //     forwardlinks: req.body.forwardlinks,
+        //     backlinks: req.body.backlinks
+        // });
+
+        postid.id = postid.id ? postid.id : 0;
+
         var newpost = post({
             id: postid.id + 1,
             userId: req.body.userId,
-            title: req.body.title,
-            body: req.body.body,
-            forwardlinks: req.body.forwardlinks,
-            backlinks: req.body.backlinks
+            posts: req.body.posts,
+            comments: req.body.comments,
+            settings: req.body.settings
         });
 
         newpost.save((err, data) => {

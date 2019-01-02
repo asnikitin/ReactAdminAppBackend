@@ -1,16 +1,39 @@
 const mongoose = require('mongoose');
 
+// const PostSchema = mongoose.Schema({
+//     userId: Number,
+//     id: {
+//         type: Number,
+//         default: 0
+//     },
+//     image: String,
+//     title: String,
+//     body: String,
+//     forwardlinks: {},
+//     backlinks: {},
+// }, {
+//     versionKey: false,
+//     strict: false
+// });
+
 const PostSchema = mongoose.Schema({
-    userId: Number,
     id: {
         type: Number,
         default: 0
     },
-    image: String,
-    title: String,
-    body: String,
-    forwardlinks: {},
-    backlinks: {},
+    userId: Number,
+    posts: {
+        type: Array,
+        default: []
+    },
+    comments: {
+        type: Array,
+        default: []
+    },
+    settings: {
+        type: Array,
+        default: []
+    }
 }, {
     versionKey: false,
     strict: false
