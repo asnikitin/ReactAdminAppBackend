@@ -33,7 +33,9 @@ const PostSchema = mongoose.Schema({
     settings: {
         type: Array,
         default: []
-    }
+    },
+    title: String,
+    body: String
 }, {
     versionKey: false,
     strict: false

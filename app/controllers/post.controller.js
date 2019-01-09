@@ -192,14 +192,14 @@ exports.update = (req, res) => {
         id: parseInt(req.params.postId),
     }, {
         $set: {
-            // title: req.body.title,
-            // body: req.body.body,
             // forwardlinks: req.body.forwardlinks,
             // backlinks: req.body.backlinks
             userId: req.body.userId,
             posts: req.body.posts,
             comments: req.body.comments,
-            settings: req.body.settings
+            settings: req.body.settings,
+            title: req.body.title,
+            body: req.body.body
         }
     }, (err, data) => {
         if (err) return res.status(500).send(err);
@@ -268,7 +268,9 @@ exports.create = (req, res) => {
             userId: req.body.userId,
             posts: req.body.posts,
             comments: req.body.comments,
-            settings: req.body.settings
+            settings: req.body.settings,
+            title: req.body.title,
+            body: req.body.body
         });
 
         newpost.save((err, data) => {
