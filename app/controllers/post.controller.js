@@ -1,6 +1,5 @@
 const models = require('../models/post.model.js');
 const post = models.post;
-const MediaUpload = models.MediaUpload;
 var fs = require("fs");
 var path = require('path');
 var FilePath = path.join(__dirname, '../../MediaUploads');
@@ -242,8 +241,6 @@ exports.getbyid = (req, res) => {
 
 exports.create = (req, res) => {
 
-    //console.log(req.body);
-
     post.findOne({}, {
         "id": 1
     }, {
@@ -252,26 +249,15 @@ exports.create = (req, res) => {
         }
     }, function (err, postid) {
 
-        // var newpost = post({
-        //     id: postid.id + 1,
-        //     userId: req.body.userId,
-        //     title: req.body.title,
-        //     body: req.body.body,
-        //     forwardlinks: req.body.forwardlinks,
-        //     backlinks: req.body.backlinks
-        // });
+        // postid.id = postid.id ? postid.id : 0;
 
-        postid.id = postid.id ? postid.id : 0;
+        Object.keys(req.body).map(item => {
+            if (!Object.keys(post.schema.tree).includes(item)) delete req.body[item]
+        })
 
-        var newpost = post({
-            id: postid.id + 1,
-            userId: req.body.userId,
-            posts: req.body.posts,
-            comments: req.body.comments,
-            settings: req.body.settings,
-            title: req.body.title,
-            body: req.body.body
-        });
+        req.body['id'] = postid.id ? postid.id : 0;
+
+        var newpost = post(req.body);
 
         newpost.save((err, data) => {
             if (err) return res.status(500).send(err);
@@ -294,7 +280,7 @@ exports.upload = (req, res) => {
     var form = new formidable.IncomingForm();
     form.uploadDir = FilePath;
     var FileName = [];
-    var lstPost = [];
+    var lstPostImages = [];
 
     //file upload path
     form.parse(req, function (err, fields, files) {
@@ -311,85 +297,25 @@ exports.upload = (req, res) => {
         file.path = form.uploadDir + "/" + NewName + ext;
         path = file.path;
         FileName.push(NewName + ext);
-        lstPost.push(name);
     });
 
     form.on('end', function () {
 
         function uploader(i) {
             if (i < FileName.length) {
-                var Id = parseInt(lstPost[i]);
-                post.findOne({
-                        id: Id
-                    })
-                    .then(response => {
-
-                        if (response != null) {
-
-                            //Image Field found In Records
-                            if (response.image) {
-                                if (response.image != '' && response.image != null && response.image != undefined) {
-                                    var ImageName = response.image.substring(response.image.lastIndexOf('/'), response.image.length);
-                                    var oldFile = FilePath + ImageName;
-
-                                    //Remove Old File
-                                    fs.exists(oldFile, (exists) => {
-                                        if (exists) {
-                                            fs.unlink(oldFile);
-                                        }
-                                    });
-                                    response.image = process.env.HostUrl + "/MediaUploads/" + FileName[i];
-                                    response.save()
-                                        .then(data => {
-                                            if ((i + 1) == FileName.length) {
-                                                res.json({
-                                                    message: "Images Uploaded Successfully...",
-                                                });
-                                            } else {
-                                                uploader(i + 1);
-                                            };
-                                        })
-                                        .catch(
-                                            err => {
-                                                res.status(500).send({
-                                                    message: err
-                                                });
-                                            }
-                                        );
-                                }
-
-                            } else {
-                                //Image Field not found in records
-                                response.image = process.env.HostUrl + "/MediaUploads/" + FileName[i];
-                                response.save()
-                                    .then(data => {
-                                        if ((i + 1) == FileName.length) {
-                                            res.json({
-                                                message: "Images Uploaded Successfully...",
-                                            });
-                                        } else {
-                                            uploader(i + 1);
-                                        };
-                                    })
-                                    .catch(
-                                        err => {
-                                            res.status(500).send({
-                                                message: err
-                                            });
-                                        }
-                                    );
-                            }
-                        }
-                    }).catch(err => {
-                        res.status(500).send({
-                            message: err
-                        });
+                var image = process.env.HostUrl + "/MediaUploads/" + FileName[i];
+                lstPostImages.push(image);
+                if ((i + 1) == FileName.length) {
+                    res.json({
+                        message: "Images Uploaded Successfully...",
+                        images: lstPostImages
                     });
+                } else {
+                    uploader(i + 1);
+                };
             }
-
         }
         uploader(0);
-
     });
 
 }
