@@ -52,12 +52,17 @@ app.get('/', (req, res) => {
     });
 });
 
+const models = require('./app/models/dynamic.model.js');
 
-require('./app/routes/note.routes.js')(app);
-require('./app/routes/post.routes.js')(app);
-require('./app/routes/user.routes.js')(app);
-require('./app/routes/register.routes.js')(app);
-require('./app/routes/role.routes.js')(app);
+Object.keys(models).map(function (key, index) {
+    require('./app/routes/dynamic.routes.js')(app, key);
+});
+
+// require('./app/routes/note.routes.js')(app);
+// require('./app/routes/post.routes.js')(app);
+// require('./app/routes/user.routes.js')(app);
+// require('./app/routes/register.routes.js')(app);
+// require('./app/routes/role.routes.js')(app);
 
 // listen for requests
 app.listen(port, () => {
