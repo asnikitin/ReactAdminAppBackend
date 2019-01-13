@@ -2,6 +2,19 @@ const models = require('../models/dynamic.model.js');
 var path = require('path');
 var FilePath = path.join(__dirname, '../../MediaUploads');
 
+const withGallery = (data) => {
+  const nextData =  data.map(item => {
+    const { gallery } = item;
+    return {
+      ...item._doc,
+      image: gallery[0].src[0],
+    };
+  });
+  console.log(nextData);
+  return nextData;
+};
+
+
 exports.CreateRecord = (req, res) => {
 
     //Get Url
@@ -103,7 +116,7 @@ exports.GetRecord = (req, res) => {
         .then(data => {
             Model.countDocuments({}).then(count => {
                 res.setHeader('X-Total-Count', count);
-                res.json(data);
+                res.json(withGallery(data));
             });
         }).catch(err => {
             res.status(500).send({
