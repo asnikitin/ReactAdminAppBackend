@@ -25,6 +25,7 @@ tmp/
 temp/
 platforms/
 plugins/
+MediaUploads/
 plugins/android.json
 plugins/ios.json
 www/

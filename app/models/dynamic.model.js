@@ -29,7 +29,10 @@ const PagesSchema = mongoose.Schema({
 });
 
 const UserSchema = mongoose.Schema({
-    id: Number,
+    id: {
+        type: String,
+        default: ''
+    },
     name: String,
     username: String,
     email: String,
@@ -57,8 +60,8 @@ const UserSchema = mongoose.Schema({
 
 const PostSchema = mongoose.Schema({
     id: {
-        type: Number,
-        default: 0
+        type: String,
+        default: ''
     },
     userId: Number,
     gallery: {

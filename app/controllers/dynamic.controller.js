@@ -19,14 +19,26 @@ exports.CreateRecord = (req, res) => {
     if (!isEmptyObject(req.body)) {
         Model(req.body).save((err, data) => {
             if (err) return res.status(500).send(err);
-            Model.findOne(data)
-                .then(data => {
-                    res.send(data);
-                }).catch(err => {
-                    res.status(500).send({
-                        message: err.message || `Some error occurred while retrieving ${result}`
-                    });
-                });
+            data.id = data._id;
+            console.log(data);
+            Model.findByIdAndUpdate(
+                data._id,
+                data, {
+                    new: true
+                },
+                (err, resdata) => {
+                    if (err) return res.status(500).send(err);
+                    return res.send(resdata);
+                }
+            )
+            // Model.findOne(data)
+            //     .then(resdata => {
+            //         res.send(resdata);
+            //     }).catch(err => {
+            //         res.status(500).send({
+            //             message: err.message || `Some error occurred while retrieving ${result}`
+            //         });
+            //     });
         });
     } else {
         res.status(500).send({
@@ -111,7 +123,7 @@ exports.GetRecordById = (req, res) => {
     var Model = models[result];
 
     Model.findOne({
-            _id: ObjectId(req.params._id)
+            id: req.params._id
         })
         .then(data => {
             res.send(data);
@@ -134,11 +146,11 @@ exports.DeleteRecord = (req, res) => {
     var Model = models[result];
 
     Model.deleteOne({
-        _id: ObjectId(req.params._id)
+        id: req.params._id
     }, (err, resp) => {
         if (err) return res.status(500).send(err);
-        res.json({
-            _id: ObjectId(req.params._id)
+        res.send({
+            id: req.params._id
         });
     });
 
